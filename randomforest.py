@@ -1,14 +1,15 @@
 import numpy as np 
 from collections import Counter 
-from decisiontree import DecisionTree
+from decisiontree_classification import DecisionTree
 
 class RandomForest:
-    def __init__(self, n_estimators = 100, max_features = 'sqrt', max_depth = None, bootstrap = True, max_samples = None):
+    def __init__(self, n_estimators = 100, max_features = 'sqrt', max_depth = None, bootstrap = True, max_samples = None, is_classification = True):
         self.n_estimators = n_estimators
         self.max_features = max_features
         self.max_depth = max_depth 
         self.bootstrap = bootstrap
         self.max_samples = max_samples
+        self.is_classification = is_classification
         self.trees = []
 
     def _bootstrap_sample(self, X, y):
@@ -40,4 +41,8 @@ class RandomForest:
     
     def predict(self, X):
         tree_preds = np.array([tree.predict(X) for tree in self.trees])
-        return np.apply_along_axis(lambda x: Counter(x).most_common(1)[0][0], axis=0, arr=tree_preds)
+
+        if self.is_classification:
+            return np.apply_along_axis(lambda x: Counter(x).most_common(1)[0][0], axis=0, arr=tree_preds)
+        else:
+            return np.mean(tree_preds, axis=0)

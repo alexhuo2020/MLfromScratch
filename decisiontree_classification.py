@@ -9,13 +9,10 @@ class TreeNode:
         self.right = right            # Right subtree (greater than threshold)
         self.value = value            # Class label or prediction (for leaf nodes)
 
-
 class DecisionTree:
-    def __init__(self, max_depth = None, is_classification = True):
+    def __init__(self, max_depth = None):
         self.max_depth = max_depth 
-        self.is_classification = is_classification
         self.tree = None
-        
 
     def fit(self, X, y):
         self.tree = self._build_tree(X, y, depth=0)
@@ -25,19 +22,13 @@ class DecisionTree:
         if len(np.unique(y)) == 1:
             return TreeNode(value=np.unique(y)[0]) # leaf node
         if self.max_depth is not None and depth >= self.max_depth:
-            if self.is_classification:
-                majority_class = np.bincount(y).argmax()
-            else:
-                majority_class = np.mean(y)
+            majority_class = np.bincount(y).argmax()
             return TreeNode(value=majority_class) # leaf node (max depth)
 
         # find the best split
         feature, threshold, left_y, right_y = self._best_split(X, y)
         if feature is None:
-            if self.is_classification:
-                majority_class = np.bincount(y).argmax()
-            else:
-                majority_class = np.mean(y)
+            majority_class = np.bincount(y).argmax()
             return TreeNode(value=majority_class) # leaf node (no split data)
 
         # split data
@@ -70,9 +61,6 @@ class DecisionTree:
             prob_c = np.sum(y==c)/len(y)
             impurity -= prob_c ** 2
         return impurity
-    
-    def _var(self, y):
-        return np.var(y)
 
     def _best_split(self, X, y):
         best_gini = float('inf')
@@ -84,12 +72,8 @@ class DecisionTree:
                 left_X, right_X, left_y, right_y = self._split_data(X, y, feature, threshold)
                 if len(left_y) == 0 or len(right_y) == 0:
                     continue 
-                if self.is_classification:
-                    gini = (len(left_y) / len(y) * self._gini(left_y) +
-                            len(right_y) / len(y) * self._gini(right_y))
-                else:
-                    gini = (len(left_y) / len(y) * self._var(left_y) +
-                            len(right_y) / len(y) * self._var(right_y))
+                gini = (len(left_y) / len(y) * self._gini(left_y) +
+                        len(right_y) / len(y) * self._gini(right_y))
                 if gini < best_gini:
                     best_gini = gini
                     best_feature = feature 
@@ -98,6 +82,7 @@ class DecisionTree:
                     best_right_y = right_y 
 
         return best_feature, best_threshold, best_left_y, best_right_y
+
 
 
 

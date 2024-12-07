@@ -92,6 +92,15 @@ Code implementations
 	+ `if x[node.feature] <= node.threshold: return _predict(x, node.left)`
 	+ `if x[node.feature] > node.threshold: return _predict(x, node.right)`
 
+### Decision trees for regression
+For decision trees for regression, the gini index will not be used since it only applied to discrete random variables. Instead, we use variance. 
+$$\text{Var}(y) = \frac{1}{N}\sum_{i=1}^N (y_i - \bar y)^2$$
+- we want to make the node closer to the mean, so we use variance
+- to get the leaf node value, we use averaging instead of majority voting
+
+Based on the above observations, we need to change the code `gini` to `var` and `np.bincount(y).argmax()` to `y.mean()`. 
+
+
  
 ## Bias vs Variance
 Bias and Variance are two fundamental sources of error in machine learning models, and they represent the tradeoff between underfitting and overfitting.

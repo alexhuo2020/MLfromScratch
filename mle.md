@@ -93,3 +93,64 @@ Code implementations
 	+ `if x[node.feature] > node.threshold: return _predict(x, node.right)`
 
  
+## Bias vs Variance
+Bias and Variance are two fundamental sources of error in machine learning models, and they represent the tradeoff between underfitting and overfitting.
+
+### Bias
+- Definition: Bias is the error introduced by approximating a real-world problem (which may be complex) by a simplified model.
+- Cause: High bias occurs when a model is too simple to capture the underlying patterns in the data. This is often the result of overly strong assumptions made by the model.
+- Effect: A high-bias model systematically makes errors on the training data because it cannot capture the complexity of the relationships in the data. This leads to underfitting—where the model does not perform well on both the training set and the test set.
+- Example: A linear regression model trying to fit a nonlinear relationship in the data. The linear model is too simple to capture the curve, leading to high bias.
+
+**Signs of high bias:**
+
+- The model performs poorly on both the training data and the test data.
+- The model makes systematic errors, as it is unable to capture key patterns or relationships in the data.
+
+### Variance
+- Definition: Variance is the error introduced by the model’s sensitivity to small fluctuations or noise in the training data.
+- Cause: High variance occurs when a model is too complex and overfits the training data. The model learns not only the underlying patterns but also the noise or random fluctuations in the data.
+- Effect: A high-variance model performs well on the training data but poorly on the test data, as it fails to generalize. This leads to overfitting—where the model is too tailored to the training set and doesn’t work well with new, unseen data.
+- Example: A decision tree with very deep branches that perfectly fits the training data but fails to generalize to new data because it captures too many details (including noise).
+
+**Signs of high variance:**
+
+- The model performs well on the training data but poorly on the test data.
+- The model's predictions are highly sensitive to small changes in the input data.
+
+### Tradeoff
+- **Underfitting:** This occurs when the model has **high bias** and **low variance**. The model is too simple, making it unable to capture the complexity of the data.
+- **Overfitting:** This occurs when the model has **low bias** and **high variance**. The model is too complex, capturing noise in the training data and failing to generalize well to unseen data.
+
+**Reducing Bias:**
+- Increase model complexity (e.g., use more features, choose more complex models).
+- Use more sophisticated algorithms (e.g., gradient boosting, neural networks).
+
+**Reducing Variance:**
+- Use simpler models (e.g., linear regression, shallow decision trees).
+- Use regularization techniques (e.g., L2 regularization, pruning in decision trees).
+- Use ensemble methods (e.g., bagging, random forests) to average out the predictions.
+
+
+For improvement over decision trees, we can apply bagging (random forests) or gradient boosting to reduce the variance and bias. 
+
+### Bagging and Random Forests
+**Bagging**: an ensemble method to reduce variance of the machine learning model, combining multiple model predictions together. Reduce overfitting.
+
+**Steps**
+1. bootstrap sampling: random create multiple subsets of sampling data **with replacement**.
+2. Train separate model on each boostrap sample. For decision trees (random forests), we use a random subset of features for each model.
+3. aggregate predictions
+	+ classification: majority voting
+	+ regression: averaging
+
+
+Code implement
+- for bootstrap sampling `np.random.choice(n_samples, max_samples, replace = True)`
+- use the first `max_feature = sqrt(n_features)` of orther max feature functions
+- for each sampled data, run decision tree, and aggregate the results `trees.append(tree)`
+- for classification, majority voting 
+```python
+tree_preds = np.array([tree.predict(X) for tree in self.trees])
+result = np.apply_along_axis(lambda x: Counter(x).most_common(1)[0][0], axis=0, arr=tree_preds)
+```

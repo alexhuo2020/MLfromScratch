@@ -18,7 +18,7 @@ Code implementation guides
 - use `np.random.choices(n_samples, n_clusters, replace=False)` for the first step
 - to get the partition, we just compute the distances from a point to the centroids and find the smallest one.
 	+ $X$: `n_samples` x `n_features`
-	+ $centroids$: k x `n_features`
+	+ centroids: k x `n_features`
 	+ use `np.linalg.norm(X[:,np.newaxis] - centroids, axis=2)` to get all the distances, size `n_samples x k x n_features`
 	+ use `labels=np.argmin(distances, axis=1)` to get the partition indices
 - to get the mean, just call `X[labels==i].mean()` to get the mean of each cluster

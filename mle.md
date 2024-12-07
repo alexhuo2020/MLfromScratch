@@ -43,8 +43,10 @@ Decision tree is a **supervised learning** method both for **classification** an
 
 Given observations $(X_i, y_i), i=1,\ldots, n$. A decision tree makes decision based on thresholds set on features. 
 
-- Gini index: $1 - \sum_i p_i^2$
+- Gini impurity: $1 - \sum_i p_i^2$
 	+ $p_i$ is the probability of class $i$
+	+ the smaller, the more pure
+	+ in decision tree, we want to split the data in such a way that the resulting child nodes are as pure as possible
 
 Example:
 - (1,0), (2,0), (3,1)
@@ -70,3 +72,24 @@ def gini(y):
 		impurity -= prob_c ** 2
 	return impurity
 ```
+
+Code implementations
+- the final decisions are leaf nodes, only has values (classes)
+- the root: feature, threshold, left node, right node
+- left node: <= threshold, right node: > threshold
+- to find the best split
+	+ for each feature and threshold, compute the gini impurity, and find the best feature and threshold
+	+ split into left and right; for left and right, find the best split and do it iteratively
+- use bfs to build the tree
+	+ `left_node = build_tree(left_X, left_y, depth+1)`
+	+ `right_node = build_tree(right_X, right_y, depth+1)`
+	+ return the root, `TreeNode(best_feature, best_threshold, left_y, right_y)`
+	+ Three cases for the leaf node
+		+ reach max depth
+		+ no split data (feature=None)
+	 	+ only 1 class in y
+- to predict, search algorithm in binary search tree
+	+ `if x[node.feature] <= node.threshold: return _predict(x, node.left)`
+	+ `if x[node.feature] > node.threshold: return _predict(x, node.right)`
+
+ 

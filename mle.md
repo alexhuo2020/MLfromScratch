@@ -25,7 +25,7 @@ Code implementation guides
 
 
 ## KNN
-** The problem**
+**The problem**
 
 Given observations $(X_i, y_i), i=1,\ldots, n$. For a new point $x$, find the $k$ nearest neighbors, i.e.
 $$\|X_{(1)} - x\| \le \cdots \le \|X_{(k)} - x\|$$

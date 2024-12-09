@@ -226,4 +226,100 @@ $$F_{s} \gets  F_{s-1}  + \eta G_{s-1}$$
 - instead, we compute the updated residuals each iteration
 
 
+### Gradient Boosting in General
+**Gradient Boosting**
+- both for classification and regression
+- builds a predictive model in a stage-wise fashion by sequentially adding weak learners (typically decision trees) to minimize a loss function
+- **gradient** refers to use gradient descent to optimize the loss function
+
+**Key Concepts**
+- Weak Learner: a model that performs slightly better than random guessing, such as a shallow decision tree
+- Ensemble: final model is an ensemble of all the weak learners added in a step-by-step manner
+- Additive training: each model correct the errors of the combined ensemble so far
+- gradient descent: minimize the loss function by descending the gradient
+
+**Math Theory**
+- learning objective (loss function) $L(y,F(x))$
+	+ $F(x)$ is the model prediction, in regression, $L = \frac{1}{N}\sum_i (y_i - F(x_i))^2$ 
+	+ in classification, the loss is more complicated, in the above example, the loss is the **Binary Cross-Entropy (BCE) Loss**
+	$$L = -\frac{1}{N} \sum_{i=1}^N \left[y_i \log \hat p_i + (1-y_i) \log (1-\hat p_i)\right]$$
+	$$\hat p_i = \frac{1}{1+e^{-F(x_i)}}$$
+
+- gradient descent is to update $F$ by $$F \gets F - \eta \frac{\partial L}{\partial F}$$
+	+ in regression $\frac{\partial L}{\partial F} = \frac{2}{N} (y_i - F(x_i)) =  (2/N)r$, where $r$ is the residual
+	+ in classification $\frac{\partial L}{\partial F} = y_i - \hat p_i  =r$
+	+ $F$ is a function so the derivative is actually a functional derivative (ignore this if you donot understand)
+
+- in the $k$-th step, we need to minimizing $L(y, F_k(x))$. 
+	+ fit the gradient $\partial L /\partial F(y,F_{k-1}(x))$ with $G_k$
+	+ and add it to the ensemble $F_k = F_{k-1} + \eta G_k$
+
+- the learining rate has an optimal value, which can be solved by 
+	$$\eta_k=\min_{\eta} L(y,F_{k-1}(x) + \eta G_k)$$
+	+ we can use this to do the update $F_k = F_{k-1} + \eta_k G_k$
+	+ without an optimal learning rate, algorithm still works but just maynot be optimal
+
+- Final ensemble of models $$F_S = \sum_{k=1}^S \eta_k G_k + G_0$$
+
+
 ### AdaBoost
+Adaptive method for gradient descent is that the learning rate is adjusted by a weight considering history of the gradients. The **adaptive** property is 
+- subsequent weak learners (models) are adjusted in favor of instances misclassified by previous models
+
+AdaBoost
+- primarily for bindary classification 
+
+
+**Derivation of the algorithm**
+- The loss function
+	$$L(y,F(x)) = \sum_{i=1}^N e^{-y_i F(x_i)}$$
+	+ $y_i \in \{-1,1\}$
+	+ $F = \sum_{k=1}^K \alpha_k G_k(x)$
+
+- gradient descent
+	+ comptue the gradient
+	$$\frac{\partial L}{\partial F}(x_i) = - y_i e^{-y_i F_{k-1}(x_i)}$$
+	+ fit the gradient with $G_k$
+	+ do gradient descent:
+	$$F_k(x_i) = F_{k-1} (x_i) - \eta \frac{\partial L}{\partial F}(x_i) = F_{k-1}(x_i) + \eta G_k(x_i) $$
+
+- update the learning rate
+	+ we then update the learning rate by minimizing
+		$$\eta_k=\min_{\eta} L(y,F_{k-1}(x) + \eta G_k)$$
+
+	+ let's do this by solving $$\frac{\partial L(y, F_{k-1} + \eta G_k)}{\partial \eta} = 0$$
+
+		+ Rewrite the loss function as $$L_k = \sum_{i} e^{-y_i \left(F_{k-1}(x_i) + \eta G_k(x_i)\right)} = \sum_{i} e^{-y_i F_{k-1}(x_i)} e^{-\eta y_i G_k(x_i)}:=\sum_{i=1}^N w_i^k e^{-\eta y_i G_k(x_i)}$$
+		+ the weight $w_i^k:= e^{-y_i G_{k-1}(x_i)}$ is carried forward from previous iterations
+		+ $L_k$ can be splitted to correct and incorrect classifications by $G_k$
+		$$L_k = \sum_{i: G_k(x_i) = y_i} w_i^k e^{-\eta} +  \sum_{i: G_k(x_i) \not= y_i} w_i^k e^{-\eta}$$
+		+ Rewrite in the form 
+		$$L_k = (1-\varepsilon_k) e^{-\eta} + \varepsilon_k e^{\eta}$$
+		$$\varepsilon_k = \frac{\sum_{i: G_k(x_i) \not= y_i} w_i^k }{\sum_i w_i^k}$$
+		+ compute the gradient $\partial L / \partial \eta$:
+		$$\frac{\partial L}{\partial \eta} = -\eta (1-\varepsilon_k) e^{-\eta} + \varepsilon_k \eta e^{\eta}=0 $$
+		+ solve it to get $$\eta_k=\frac12\log \frac{1-\varepsilon_k}{\varepsilon_k} $$
+
+- the final update rule is 
+	$$F_k(x_i) =  F_{k-1}(x_i) + \eta_k G_k(x_i),\quad \eta_k = \frac12\log \frac{1-\varepsilon_k}{\varepsilon_k} $$
+	+ since $\varepsilon_k$ depends on $w_k$, we can also derive the update rule for $w_k$ using its definition:
+	$$w_i^k = w_i^{k-1} e^{-\eta_k y_i G_k(x_i)} = \left\{\begin{array}{ccc} w_i^{k-1} e^{-\eta_k} & \text{ if }y_i = G_k(x_i) \\  w_i^{k-1} e^{\eta_k} & \text{ if }y_i \not= G_k(x_i)\end{array}\right.$$
+	+ $w_i$ is usually normalized $w_i^k = w_i^k/ \sum_{j=1}^N w_j^{k}$ before passing to the next iteration.
+
+- final strong classifier 
+	$$F(x) = \text{sign} \left(\sum_{i=1}^K \eta_k G_k(x)\right)$$
+
+**The algorithm**
+- Initialize $w_i^0=\frac{1}{N}$ for all $i=1,\ldots,N$.
+- for  k from 1 to K: 
+	+ train week decision tree $G_k$ to fit $\sum_{i=1}^N 1_{y_i \not= F_{k-1} (x_i)} e^{-y_i F_{k-1}(x_i)} = \sum_{i=1}^N 1_{y_i \not= F_{k-1} (x_i)} w_i^{k-1} = \varepsilon_{k-1}$ (since the model $F_{k-1}$ already fit some data well and we want to keep it)
+	+ compute $\eta_k = \frac12 \log \frac{1-\varepsilon_k}{\varepsilon_k}$
+	+ update weights $w_i^k = w_i^{k-1} e^{-\eta_k y_i G_k(x_i)}$
+- output strong classifier
+	$$F(x) = \text{sign} \left(\sum_{i=1}^K \eta_k G_k(x)\right)$$
+
+
+Note that we need a decision tree supporting weights, this can be done by updating the gini computation by 
+$$\text{Gini}(p) = 1-\sum_k p_k^2,\quad p_k = \frac{\sum_{i\in S_k} w_i}{\sum_i w_i} $$
+and also the computation of gini impurity for the splits.
+$$\text{impurity} = \frac{\sum_{i\in S_{\text{left}}} w_i}{\sum_{i\in S} w_i} \text{impurity}_{\text{left}} + \frac{\sum_{i\in S_{\text{right}}} w_i}{\sum_{i\in S} w_i} \text{impurity}_{\text{right}}$$

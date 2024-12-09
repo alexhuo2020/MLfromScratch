@@ -1,5 +1,8 @@
 # Machine learning algorithm from scratch
 
+## Linear regression
+
+
 ## KMeans
 **The problem**
 
@@ -161,5 +164,66 @@ Code implement
 - for classification, majority voting 
 ```python
 tree_preds = np.array([tree.predict(X) for tree in self.trees])
-result = np.apply_along_axis(lambda x: Counter(x).most_common(1)[0][0], axis=0, arr=tree_preds)
+result = np.apply_along_axis(lambda x: Counter(x).most_common(1)[0][0], axis=0, arr=tree_preds) # classification
+result = np.mean(tree_preds) # regression
 ```
+
+Why bootstrap is done with replacement?
+- If we take the sample size equal the dataset, probability that a specific point is not included in a single sample is:
+$$\left(1-\frac1n\right)^n \to e^{-1} = 0.368$$
+about 36.8% data is left out in each bootstrap sample.
+- If we do without replacement, then all data are used, trees train on identical datasets and will not benefit from bootstrap sampling.
+
+
+### Boosting
+Boosting aims to convert weak learners to strong learns.
+
+#### Simple boosting
+Let's build a series of decision trees, with the later one learn the residual of the previous one.
+
+Let's take a regression problem as example. The objective function is 
+$$L = \frac{1}{n} \sum_i (\hat y_i - y_i)^2$$
+- $\hat y_i$: predictions
+- $y_i$: true value
+
+Let's take a look at a simple boosting process:
+- Let's start with a simple model $G_0(x_i) = \frac{1}{N} \sum_{i=1}^N y_i$, which is a constant.
+- compute residual $$r_0(x_i) = y_i - G_0(x_i)$$
+- use a model (e.g. decision tree) on the residual, i.e. fit $r_0(x_i)$ with $G_1(x_i)$.
+- update the residual $$r_1(x_i) = y_i - G_0(x_i) - \eta G_1(x_i)$$
+- do the above steps iteratively, using a new model at each step
+	+ $r_s(x_i) \gets r_{s-1}(x_i) - \eta G_{s-1} (x_i)$
+	+ fit $\{(x_i,r_s(x_i))\}_{i=1}^N$ with model $G_s$
+- final model is $$G(x) = \sum_{s=1}^m \eta G_s(x) + G_0$$
+
+Why a learning rate is used?
+- $G_s(x_i) = (r_{s+1}(x_i) - r_s(x_i)) /\eta$, since the residuals are usually small, dividing a learning parameters will make it bigger and easier to learn.
+- this is actually gradient descent method (will explain later)
+
+**Code Implementation**
+- The first model ($G_0$) is a constant `initial_model = np.mean(y)`
+- compute residual `residual = y - initial_model`
+- fit residual `tree.fit(residual)`
+- after fit, compute $G_s$ for the next residual `residual -= learning_rate * tree.prediction(X)`
+- to make predictions add all tree predictions together `initial_model + learning_rate * sum([tree.prediction(X) for tree in trees])`
+
+### Simple boosting for binary classification problems
+
+For classification problem, the residual is not that simple. For binary classification problem, we start with the log-odds, given by 
+$$F_0(x) = \log \frac{\bar p}{1 - \bar p}$$
+- $\bar p$ is the mean of y.
+To compute residuals, we use the regression tree output instead of the classification tree, so that the output is a float number instead of a class label. We transform the predictions with a sigmoid function 
+- residuals $$r_s(x_i) = y_i - \hat p_i,\quad \hat p_i = \frac{1}{1 + e^{-F_s(x_i)}}$$
+	+ the output of the decision tree is a float number and we use sigmoid to convert it to probability
+	+ to make predictions, one can set a threshould, say 0.5 
+	+ train model $G_s$ to fit $\{(x_i,r_s(x_i))\}$
+- update predictions by 
+$$F_{s} \gets  F_{s-1}  + \eta G_{s-1}$$
+- final predictions given by $$\hat p_S = \frac{1}{1+e^{-F(s)}}$$ and label given by $\hat p_S \ge 0.5$.
+
+**differences with regression**
+- we cannot simply add the predictions of the trees, since the residual relationship is not linear. 
+- instead, we compute the updated residuals each iteration
+
+
+### AdaBoost

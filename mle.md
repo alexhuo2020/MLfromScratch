@@ -30,6 +30,66 @@ There are two ways to solve the linear regression problem: gradient descent and 
 - for using the formula directly, we need insert 1 to the first column. `np.c_[np.ones((X.shape[0], 1)), X]` (concatenate along second axis)
 
 
+**Metrics**
+- MSE: Mean Squared Error, penalizes large errors more than smaller errors because of the squaring
+- MAE: Mean Absolute Error, less sensitive to outlier than MSE
+- $R^2$ score: $$1-\frac{\sum (y_i-\hat y_i)^2}{\sum (y_i - \bar y)^2}$$
+	+ measures the proportion of variance in the dependent variable explained by the independent variables
+	+ Closer to 1 indicates a better fit 
+- adjusted $R^2$ score: $$1 - (1-R^2) \frac{N-1}{N-p-1}$$
+	+ $p$ is the number of feature
+	+ adjusts $R^2$ to penalize adding more features that do not improve the model significantly.
+
+
+
+## Logistic Regression and Softmax Regression
+For classification problems, the linear regression cannot be used. We need a different loss function.
+
+**Entropy**
+
+The entropy in information theory is defined as 
+$$H(X) = -\sum_{x \in \mathcal X} p(x) \log p(x) =  \mathbb E [-\log p(X)] $$
+- for binomial distribution, the emprical entropy on a observation $\{y_i\}_{i=1}^N$ equals $$H(X) = \frac1N \sum_{i=1}^N - \log p(y_i) $$
+
+**Cross-Entropy**
+To compare distribution $P$ and $Q$, we define the a distance $H(P,Q):=- E_p [\log q]$ and the minimal of this value occurs when $p=q$ due to the convexity of entropy.
+- for discrete distributions, the cross entropy for  a sample equals $$H(P,Q) = - \frac1N \sum_{i=1}^N \log q(y_i)$$
+	+ $p$ is the true distribution of $y_i$
+	+ $q$ is another distribution
+	+ by minimizing it, we can get $q \approx p$
+
+
+**Logistic Regression**
+- $q(y_i=1) = \frac{1}{1 + e^{- (X\beta + \beta_0)_i}}$
+- binary distribution $y_i = 1 or 0$. Binary Cross Entropy (BCE):
+	$$H(P,Q) = - \frac1N \sum_{i=1, y_i=1}^N  \log q_i -  \frac1N \sum_{i=1, y_i=0}^N  \log q_i 	$$
+	which can be rewrite as 
+	$$H(P,Q) = -\frac1N \sum_{i=1}^N \left(y_i \log q_i + (1-y_i) \log (1-q_i)\right)$$
+- the gradient 
+	$$\frac{\partial H}{\partial q_i} = -\frac{1}{N} \left(\frac{y_i}{q_i} - \frac{1-y_i}{1-q_i} \right)$$
+	$$\frac{\partial H}{\partial \beta_j} = \sum_i \frac{\partial H}{\partial q_i} \frac{\partial q_i}{\partial \beta_j} =\sum_i  -\frac{1}{N} \left(\frac{y_i}{q_i} - \frac{1-y_i}{1-q_i} \right) (1-q_i) q_i (-X_{ij}) = -\frac1N \sum_i (y_i-q_i) X_{ij} $$
+	$$\frac{\partial H}{\partial \beta_0} = -\frac1N \sum_i (y_i-q_i)$$
+	+ the derivative is similar to that of the linear regression, except  that $q_i$ is replaced for the linear prediction
+
+**Code Implementation**
+- add `sigmoid` after the linear output in the linear regression code
+- also add `sigmoid` in the predict function
+- for sigmoid function, add a small number like $1e-15$ to avoid $log(0)$
+
+**Softmax Regression**
+- For classification with more than two classes, we can no longer use $p_i$ and $1-p_i$ for the computation. However, we should use the softmax function
+	$$q(y_i = k) = \frac{e^{z_k}}{\sum_{j=1}^K e^{z_j}}, z_k = X \beta^k+\beta_0^k \beta$$
+	+ for binary $k=0,1$ and it reduce to the sigmoid function
+	+ we only need to change the sigmoid to softmax for multi-class classification
+- Now the loss is the cross entropy loss 
+	$$H(p,q) = - \frac1N \sum_{i=1}^N \sum_{k=1}^K y_{ik}\log q(y_i = k) $$
+
+**Code Implementation**
+- remember to initialize $\beta \in \mathbb{R}^{PxK}$, P is the number of features and K is the number of classes
+- final prediction should convert to class label `np.argmax(y_pred, axis=1)`
+- use a one hot encoding on $y_i$ before compute $\hat q -\text{OneHot}(y_i)$
+
+
 
 ## KMeans
 **The problem**

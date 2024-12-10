@@ -91,6 +91,108 @@ To compare distribution $P$ and $Q$, we define the a distance $H(P,Q):=- E_p [\l
 
 
 
+**Metrics in classification**
+Four cases
+- True Positive
+- False Positive
+- True Negative 
+- False Negative 
+
+Metrics
+- Accuracy: ratio of correctly predicted instances $$\text{Accuracy} = \frac{TP + TN}{All}$$
+	+ Best for: Balanced datasets where all classes have roughly equal representation.
+	+ Limitations: Misleading for imbalanced datasets.
+
+- Precision (positive predictive value): proportion of positive predictions that are actually correct $\text{Precision} = \frac{TP}{TP + FP}$
+	+ Best for: Situations where false positives are costly (e.g., spam detection)
+
+- Recall (sensitivity): proportion of actual positives that are correctly identified $$\text{Recall} = \frac{TP}{TP + FN}$$
+	+ Best for: Situations where false negatives are costly (e.g., medical diagnosis)
+
+- F1 Score: harmonic mean of precision and recall $$\text{F1 Score} = 2 \cdot \frac{\text{Precision} \cdot \text{Recall}}{\text{Precision} + \text{Recall}}$$
+	+ Best for: Imbalanced datasets where precision and recall are both important.
+
+**ROC (Receiver Operating Characteristic) Curve**
+- shows trade-off between the True Positive Rate (TPR) (=Recall) and the False Positive Rate (FPR) at various classification thresholds.
+	$$\text{FPR} = \frac{FP}{FP + TN}$$
+	+ ROC curve evaluates the performance at all possible thresholds for classification
+	+ interpret:
+		+ Diagonal Line: Represents random guessing (e.g., TPR=FPR).
+		+ Above Diagonal: Indicates better performance (more true positives than false positives).
+		+ Closer to Top Left: Indicates optimal performance, with high TPR and low FPR.
+
+**AUC (Area Under the Curve)**
+- A single scalar value that quantifies the overall performance of the model by calculating the area under the ROC curve.
+- Ranges:
+	+ 1.0: Perfect classifier (all predictions are correct)
+	+ 0.5: Random guessing (the ROC curve is a diagonal line)
+	+ <0.5: Worse than random guessing (rare and indicates possible model issues)
+- Interpret: The AUC score represents the probability that the model ranks a randomly chosen positive instance higher than a randomly chosen negative instance.
+- ROC and AUC: Threshold Independence and Imbalance Robustness
+- For highly imbalanced datasets (e.g., fraud detection where positives are rare): use Precision-Recall Curve instead because it focuses more on the performance related to the positive class.
+
+Example:
+- suppose a binary classifier for spam email detection
+	+ TPR increases as we lower the threshold (catch more spam but risk false positives).
+	+ FPR increases as we lower the threshold (more non-spam emails incorrectly classified as spam).
+
+**Precision-Recall Curve**
+- More insightful for imbalanced datasets because it emphasizes the performance on the minority (positive) class.
+- Ideal for problems where identifying positives (e.g., fraud, rare disease) is critical.
+
+
+Example:
+1. Use Case: Fraud Detection
+- Scenario: Detect fraudulent transactions in a banking system.
+
+- Challenge: Fraud is rare (imbalanced dataset), and missing a fraudulent transaction (false negative) is costly.
+
+- Metric Priority: High recall (to catch as many frauds as possible), even at the cost of reduced precision.
+
+- Threshold Selection:
+	+ Lower the threshold to increase recall.
+	+ Example: Predict "fraud" if probability > 0.3 instead of 0.5.
+	+ Trade-Off: More false positives (non-fraud marked as fraud), which can be reviewed manually.
+
+
+2. Use Case: Medical Diagnosis
+- Scenario: Predict the presence of a disease.
+
+- Challenge: Missing a disease diagnosis (false negative) is critical, while a false positive might lead to unnecessary tests but no serious harm.
+
+- Metric Priority: Maximize recall to minimize false negatives.
+
+- Threshold Selection:
+	+ Lower the threshold to ensure more positive predictions are flagged.
+	+ Example: For a cancer detection model, classify as "positive" if the probability > 0.2.
+	+ Trade-Off: More false positives, but fewer missed cases.
+
+3. Use Case: Spam Detection
+- Scenario: Classify emails as spam or not.
+
+- Challenge: Minimizing false positives is critical, as important emails misclassified as spam could harm users.
+
+- Metric Priority: High precision to avoid misclassifying legitimate emails as spam.
+
+- Threshold Selection:
+	+ Increase the threshold to prioritize precision.
+	+ Example: Flag emails as spam only if the probability > 0.8.
+	+ Trade-Off: Some spam emails might not be detected (lower recall).
+
+4. Use Case: Autonomous Vehicles
+- Scenario: Detect obstacles in the path of a self-driving car.
+
+- Challenge: False negatives (failing to detect an obstacle) could lead to accidents, while false positives might lead to unnecessary stops.
+
+- Metric Priority: Balance between precision and recall (F1 Score).
+
+- Threshold Selection:
+	+ Use a balanced threshold (e.g., 0.5) to ensure both metrics are optimized.
+	+ Dynamic thresholds can be applied based on environmental conditions.
+
+
+
+
 ## KMeans
 **The problem**
 

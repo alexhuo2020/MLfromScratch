@@ -1,6 +1,34 @@
 # Machine learning algorithm from scratch
 
-## Linear regression
+## Linear Regression
+**Problem** 
+
+Given data set $\{(X_i,y_i)\}_{i=1}^N$, $X_i \in \mathbb{R}^{p}, y \in \mathbb R$, where $p$ is the dimension of features. Find the a line
+$$y = X \beta +  \beta_0 $$
+such that the mean squared error (MSE) is minimal. 
+$$\text{MSE} = \frac{1}{N} \sum_{i=1}^N \left(y_i - (\beta_0 + \sum_{j=1}^p X_{ij} \beta_j\right)^2$$
+
+**The algorithm**
+There are two ways to solve the linear regression problem: gradient descent and use inverse matrix formula.
+- gradient descent
+	+ compute gradient of MSE with respect to $\beta$:
+		$$\frac{\partial \text{MSE}}{\partial\beta_j} = \frac{2}{N} \sum_{i=1}^N  \left(y_i - (\beta_0 + \sum_{k=1}^p X_{ik} \beta_j\right) X_{ij} $$
+		$$\frac{\partial \text{MSE}}{\partial\beta_0} = \frac{2}{N} \sum_{i=1}^N  \left(y_i - (\beta_0 + \sum_{k=1}^p X_{ik} \beta_j\right) $$
+	+ gradient descent
+		+ $\beta_j \gets \beta_j - \eta \frac{\partial \text{MSE}}{\partial\beta_j}$
+	
+- inverse matrix formula
+	+ $\hat \beta = (X^T X)^{-1} X^T y$
+	+ here we add $1$ and $X$ is given by
+		$$X = \left(\begin{array}{ccc} 1 & x_{11} & \cdots & x_{1p} \\
+										1 & x_{21} & \cdots & x_{2p} \\
+										\vdots & \vdots & \ddots & \vdots \\
+										1 & x_{N1} & \cdots & x_{Np}\end{array}\right)$$
+
+**Code implementations**
+- express input $X=(X_{ij}) \in \mathbb{R}^{N\times p}$ as matrix and the gradient can be computed by $1/N * np.dot(X.T, y_pred - y) $
+- for using the formula directly, we need insert 1 to the first column. `np.c_[np.ones((X.shape[0], 1)), X]` (concatenate along second axis)
+
 
 
 ## KMeans
@@ -323,3 +351,4 @@ Note that we need a decision tree supporting weights, this can be done by updati
 $$\text{Gini}(p) = 1-\sum_k p_k^2,\quad p_k = \frac{\sum_{i\in S_k} w_i}{\sum_i w_i} $$
 and also the computation of gini impurity for the splits.
 $$\text{impurity} = \frac{\sum_{i\in S_{\text{left}}} w_i}{\sum_{i\in S} w_i} \text{impurity}_{\text{left}} + \frac{\sum_{i\in S_{\text{right}}} w_i}{\sum_{i\in S} w_i} \text{impurity}_{\text{right}}$$
+

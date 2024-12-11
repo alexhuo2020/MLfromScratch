@@ -514,3 +514,68 @@ $$\text{Gini}(p) = 1-\sum_k p_k^2,\quad p_k = \frac{\sum_{i\in S_k} w_i}{\sum_i 
 and also the computation of gini impurity for the splits.
 $$\text{impurity} = \frac{\sum_{i\in S_{\text{left}}} w_i}{\sum_{i\in S} w_i} \text{impurity}_{\text{left}} + \frac{\sum_{i\in S_{\text{right}}} w_i}{\sum_{i\in S} w_i} \text{impurity}_{\text{right}}$$
 
+
+## Kernel Based Methods
+
+### Support Vector Machine (SVM)
+**Problem**
+Given data $\{x_i,y_i\|_{i=1}^N$ where $y_i\in \{-1,1\}$ is the class label. Find a plane $w\cdot x + b = 0$ that separates the two classes with the largest margin.
+- margin: perpendicular distance between the two closest points of the classes and the hyperplane
+	+ $wx+b=1$ and $wx+b=-1$ distance $$d = \text{margin} = \frac{2}{\|w\|}$$
+
+In mathematical expression, the problem is to optimize
+$$\min_{w,b}\frac12 \|w\|^2 \text{ such that } y_i (w\cdot x_i + b) \ge 1 \text{ for any }i=1,\ldots,N.$$
+
+**Solution by Lagrangian Dual Formulation**
+- Lagrangian dual formulation $\mathcal L(w,b,\alpha) = \frac12 \|w\|^2  - \sum_{i=1}^N \alpha_i[y_i(w\cdot x_i +b) - 1] $ 
+	+ critical point satisfies 
+		$$\frac{\partial \mathcal L}{\partial w} =  w - \sum_{i=1}^N \alpha_i y_i x_i = 0$$
+		$$\frac{\partial \mathcal L}{\partial b} = \sum_{i=1}^N \alpha_i y_i = 0$$
+	+ substitute the $w$ in to $L$ gives the dual problem 
+		$$\max_\alpha \sum_{i=1}^N \alpha_i - \frac12 \sum_{i=1}^N \sum_{j=1}^N \alpha_i \alpha_j y_i y_j (x_i\cdot x_j)$$
+		$$\text{subject to }\sum_{i=1}^N \alpha_i y_i = 0, \alpha_i\ge 0.$$
+	+ solve the dual problem to find $\alpha$ and $w = \sum_{i=1}^N \alpha_i y_i x_i, b = y_k - \sum_{i=1}^N \alpha_i y_i (x_i\cdot x_k)$
+
+- for nonlinear SVM, the plane is given by 
+	$$y = w\cdot \varphi(x) + b$$
+	+ the dual problem is 
+		$$\max_\alpha \sum_{i=1}^N \alpha_i - \frac12 \sum_{i=1}^N \sum_{j=1}^N \alpha_i \alpha_j y_i y_j \varphi(x_i)\cdot \varphi(x_j)$$
+	+ the kernel $K(x_i,x_j) =\varphi(x_i)\cdot \varphi(x_j) $
+	+ usually, the function $\varphi$ is difficult to find and $K$ is easy to define
+	+ in the nonlinear case, $w = \sum_{i=1}^N \alpha_i y_i \varphi(x_i)$ , $b_k = y_k - \sum_{i=1}^N \alpha_i K(x_i,x_k)$ and $y=w\cdot \varphi(x) +b$ where 
+	$$w\cdot \varphi(x) = \sum_{i=1}^N \alpha_i y_i \varphi(x_i) \cdot \varphi(x) =  \sum_{i=1}^N \alpha_i y_i K(x_i,x)  $$
+
+**Two Approaches**
+
+There are two approaches for solving the SVM, by solving the primal problem or the dual problem. Of course, we need a duality theorem to show there are equivalent. We will not touch this issue here but assume they are equivalent.
+
+**Solution**
+- If function $\varphi$ is given, we can solve the problem by 
+	$$\min_{w} L := \lambda \|w\|^2 +  \frac1N \sum_{i=1}^N \max(0, 1- y_i(w\cdot \varphi(x_i)+b))$$
+	+ We use a penalty parameter $\lambda$ for imposing the constraint, the optimal value for $\lambda$ is zero (it is better to put $1/\lambda$ in front of the second term to demonstrate this). 
+	+ The gradients
+		$$\frac{\partial L}{\partial w} = 2 \lambda w - \frac1N 1_{y_i(w\cdot \varphi(x_i)+b) \ge 1} y_i \varphi(x_i) $$
+		$$\frac{\partial L}{\partial b} = - \frac1N 1_{y_i(w\cdot \varphi(x_i)+b) \ge 1} y_i$$
+	+ Update rule
+	$$w \gets w - \eta \frac{\partial L}{\partial w}$$
+	$$b \gets b - \eta \frac{\partial L}{\partial b}$$
+	+ It should be figured out that the second term in the loss function is called **Hinge Loss**, which is actually non-differentiable. What we use is a sub-gradient.
+
+- When $\varphi$ is not known. We use the kernel 
+	$$y = w\cdot \varphi(x) + b = \sum_{i=1}^N \alpha_i y_i K(x_i,x) + b$$
+	and 
+	$$\|w\|^2 = \|\sum_{i} \alpha_i y_i \varphi(x_i)\|^2 = \sum_{i}\sum_j \alpha_i \alpha_j y_i y_j K(x_i,x_j)$$
+	+ Loss function
+	$$L = \lambda  \sum_{i}\sum_j \alpha_i \alpha_j y_i y_j K(x_i,x_j) + \frac1N \sum_{i=1}^N \max(0, 1- y_i(\sum_{i=1}^N \alpha_i y_i K(x_i,x) + b)) $$
+	+ One can solve this problem in the similar manner, we will not provide the code here.
+
+- One can also solve the dual problem. 
+	+ loss $$L =\sum_{i=1}^N \alpha_i - \frac12 \sum_{i=1}^N \sum_{j=1}^N \alpha_i \alpha_j y_i y_j K(x_i,x_j) $$
+	+ gradients
+	$$\frac{\partial L}{\partial \alpha_i} = 1- \sum_j \alpha_j y_iy_j K(x_i,x_j)$$
+	+ gradient ascent (maximize)
+	$$\alpha \gets \alpha + \eta \frac{\partial L}{\partial \alpha} $$
+	+ to impose $\sum_i \alpha_i y_i = 0$, we compute $\Delta = \sum_{i} \alpha_i y_i$ and update $\alpha_i$ with 
+	$$\alpha_i = \alpha_i - \frac{\Delta}{y_i}$$
+	+ We also impose a maximum value for $\alpha \le C$ by clipping 
+	$$\alpha_i = \max(\min(\alpha_i,0),C)$$

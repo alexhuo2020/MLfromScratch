@@ -231,6 +231,41 @@ Code implementaion guides:
 - use `Counter(y[nearest indices]).most_common(1)[0][0]` to get the most common class in y
 - use `np.issubdtype(y.dtype, np.integer)` to choose between classification and regression
 
+## PCA
+
+
+## t-SNE
+- t-distributed stochastic neighbor embedding
+- visualizing high-dimensional data in a lower-dimensional space
+- Objective Function: KL divergence
+	+ P: The probability distribution of pairwise distances in the high-dimensional space.
+	+ Q: The probability distribution of pairwise distances in the low-dimensional space.
+	+ minimize $$\text{KL}(P \| Q) =\sum_{i=1}^N \sum_{j=1}^N P_{ij} \log \frac{P_{ij}}{Q_{ij}} $$
+		+ $P_{ij}$: probability point $i$ and $j$ are neighbors in the high-dimensional space
+		+ $Q_{ij}$: probability point $i$ and $j$ are neighbors in the low-dimensional space
+	+ Distances in high dimensional space
+		$$P_{ij} = \frac{e^{-\|x_i-x_j\|^2 / 2\sigma^2}}{\sum_{k\not=i} e^{-\|x_i-x_k\|^2 / 2\sigma^2}}$$
+		+ it measures similarity between $x_i$ and $x_j$
+		+ it is the probability that i will pick j as its neighbor under Gaussian distribution
+	+ Distances in low dimensional space
+		$$Q_{ij} =\frac{(1+\|y_i-y_j\|^2)^{-1}}{\sum_{k\not=i}(1+\|y_i-y_k\|^2)^{-1}}$$
+		+ it is distance in heavy-tailed Student t-distribution
+- stochastic optimization via gradient descent
+	+ the gradient (derivation: https://stats.stackexchange.com/questions/301276/calculating-t-sne-gradient-a-mistake-in-the-original-t-sne-paper)
+		$$\frac{\partial \text{KL}(P \| Q)}{\partial y_i} = 4 \sum_j (P_{ij} - Q_{ij})(1+\|y_i-y_j\|^2)^{-1} (y_i-y_j)$$
+	+ update $y_i$ using gradient descent
+- way to determin $\sigma$, using perplexity
+	+ **Perplexity**: $2^{H(p)}$, where $H$ is the entropy
+	+ the larger the perplexity, the less likely it is that an observer can guess the value
+	+ adjust $\sigma_i$ for each row $P_{i\cdot}$ until reach the target perplexity
+	+ use a binary search to get the desired sigma.
+
+- Why t-distribution:
+	+ heavy tail property, reducing impact of outliers, allowing some distances to be less faithfully preserved in the embedding
+
+
+
+
 ## Decision Trees
 Decision tree is a **supervised learning** method both for **classification** and **regression**.
 
@@ -579,3 +614,10 @@ There are two approaches for solving the SVM, by solving the primal problem or t
 	$$\alpha_i = \alpha_i - \frac{\Delta}{y_i}$$
 	+ We also impose a maximum value for $\alpha \le C$ by clipping 
 	$$\alpha_i = \max(\min(\alpha_i,0),C)$$
+
+- Support vector machine use the **Hinge loss** of the form $\max(0, 1-t\cdot y)$.
+	+ Hinge Loss is more robust to outliers
+	+ Hinge loss can be more stable for large-margin classifiers
+
+
+
